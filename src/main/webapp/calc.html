@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Обчислення 3-х чисел</title>
+</head>
+<body>
+<h1>Обчислення для трьох чисел</h1>
+<form action="/calculator" method="post">
+    <label for="n1">Число 1:</label><input type="number" id="n1" name="n1" required><br><br>
+    <label for="n2">Число 2:</label><input type="number" id="n2" name="n2" required><br><br>
+    <label for="n3">Число 3:</label><input type="number" id="n3" name="n3" required><br><br>
+
+    <h2>Виберіть дію:</h2>
+    <input type="radio" id="min" name="operation" value="min" required>
+    <label for="min">Мінімум</label><br>
+    <input type="radio" id="max" name="operation" value="max">
+    <label for="max">Максимум</label><br>
+    <input type="radio" id="avg" name="operation" value="avg">
+    <label for="avg">Середнє арифметичне</label><br><br>
+
+    <button type="submit">Обчислити</button>
+</form>
+<p><a href="/">Назад до меню</a></p>
+</body>
+</html>
