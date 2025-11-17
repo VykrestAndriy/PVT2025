@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Онлайн Купівля Квитків</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        .message.success { color: green; font-weight: bold; }
+        .message.error { color: red; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        form { margin-top: 10px; padding: 10px; border: 1px solid #ccc; }
+        .search-results { margin-top: 20px; border-top: 2px solid #333; padding-top: 10px; }
+    </style>
+</head>
+<body>
+<h1>Онлайн Купівля Квитків (ЛР 8)</h1>
+
+<div th:if="${successMessage}" class="message success" th:text="${successMessage}"></div>
+<div th:if="${errorMessage}" class="message error" th:text="${errorMessage}"></div>
+
+<p><a th:href="@{/create-event}"><button>Створити Нову Подію</button></a></p>
+
+---
+
+<h2>Найближчі Події</h2>
+<div th:if="${events.isEmpty()}">
+    <p>Наразі немає запланованих майбутніх подій.</p>
+</div>
+<div th:unless="${events.isEmpty()}">
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Назва Події</th>
+            <th>Дата/Час</th>
+            <th>Місце</th>
+            <th>Адреса</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="event : ${events}">
+            <td th:text="${event.id}"></td>
+            <td th:text="${event.name}"></td>
+            <td th:text="${#temporals.format(event.eventDate, 'yyyy-MM-dd HH:mm')}"></td>
+            <td th:text="${event.place.name}"></td>
+            <td th:text="${event.place.address}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+---
+
+<h2>Пошук Вільних Квитків за Назвою Події</h2>
+<form th:action="@{/tickets/search}" method="get">
+    <label for="searchParam">Назва Події:</label>
+    <input type="text" id="searchParam" name="searchParam" th:value="${searchParam}" required>
+    <button type="submit">Пошук Квитків</button>
+</form>
+
+<div th:if="${!foundTickets.isEmpty()}" class="search-results">
+    <h3>Знайдені Вільні Квитки для '<span th:text="${searchParam}"></span>'</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Номер Місця</th>
+            <th>Ціна</th>
+            <th>Присвоїти Покупцю</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="ticket : ${foundTickets}">
+            <td th:text="${ticket.id}"></td>
+            <td th:text="${ticket.number}"></td>
+            <td th:text="${#numbers.formatCurrency(ticket.cost)}"></td>
+            <td>
+                <form th:action="@{/ticket/assign/{id}(id=${ticket.id})}" method="post" style="display:inline;">
+                    <select name="customerId" required>
+                        <option value="">Виберіть покупця</option>
+                        <option th:each="customer : ${customers}"
+                                th:value="${customer.id}"
+                                th:text="${customer.name + ' (' + customer.email + ')'}">
+                        </option>
+                    </select>
+                    <button type="submit">Купити</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<div th:if="${searchParam != null and searchParam != '' and foundTickets.isEmpty()}" class="search-results">
+    <p>Вільних квитків для події '<span th:text="${searchParam}"></span>' не знайдено.</p>
+</div>
+
+---
+
+<h2>Додати Нового Покупця</h2>
+<form th:action="@{/customer/add}" th:object="${newCustomer}" method="post">
+    <div>
+        <label for="cName">Ім'я:</label>
+        <input type="text" id="cName" th:field="*{name}" required>
+    </div>
+    <div>
+        <label for="cEmail">Email:</label>
+        <input type="text" id="cEmail" th:field="*{email}" required>
+    </div>
+    <div>
+        <label for="cPhone">Телефон:</label>
+        <input type="text" id="cPhone" th:field="*{phone}">
+    </div>
+    <button type="submit">Зберегти Покупця</button>
+</form>
+
+</body>
+</html>
