@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>ЛР 7: Книги (Spring Boot + JPA)</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        form { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+<h1>Управління Книгами (ЛР 7)</h1>
+
+<h2>Додати Нову Книгу</h2>
+<form th:action="@{/books/add}" th:object="${newBook}" method="post">
+    <label>Назва:</label><input type="text" th:field="*{title}" required><br>
+    <label>Автор:</label><input type="text" th:field="*{authorName}" required><br>
+    <label>Рік видання:</label><input type="number" th:field="*{publicationYear}"><br>
+    <label>Видавництво:</label><input type="text" th:field="*{publisher}"><br>
+    <label>Жанр:</label><input type="text" th:field="*{genre}"><br>
+    <label>Кількість сторінок:</label><input type="number" th:field="*{pageCount}"><br>
+    <label>Тираж:</label><input type="number" th:field="*{circulation}"><br>
+    <label>Опис:</label><textarea th:field="*{description}"></textarea><br>
+    <label>Бестселер:</label>
+    <input type="checkbox" th:name="isBestseller" th:checked="*{isBestseller}">
+    <input type="hidden" th:name="_isBestseller" value="on"/>
+    <br>
+    <button type="submit">Зберегти Книгу</button>
+</form>
+
+<hr>
+
+<h2>Пошук Книг</h2>
+<form th:action="@{/books/search}" method="get">
+    <label for="searchType">Виберіть тип пошуку:</label>
+    <select id="searchType" name="searchType">
+        <option value="byTitle">1. За назвою (містить)</option>
+        <option value="byAuthor">2. За автором (містить)</option>
+        <option value="byPageCount">3. За кількістю сторінок (=)</option>
+        <option value="lastEdition">4. Останнє видання автора</option>
+        <option value="publisherCurrentYear">5. Видавництвом та поточним роком (DTO)</option>
+        <option value="byYear">6. За роком випуску</option>
+        <option value="byGenreAuthorYear">7. За Жанром, Автором та Роком</option>
+        <option value="bestsellers">8. Тільки бестселери</option>
+        <option value="byDescriptionWord">9. За словом в описі</option>
+    </select>
+
+    <p>
+        <label>Параметр (для 1, 2, 3, 4, 9):</label><input type="text" name="param"><br>
+        <label>Видавництво (для 5):</label><input type="text" name="publisher"><br>
+        <label>Рік (для 6, 7):</label><input type="number" name="year"><br>
+        <label>Жанр (для 7):</label><input type="text" name="genre"><br>
+        <label>Автор (для 7):</label><input type="text" name="author">
+    </p>
+
+    <button type="submit">Пошук</button>
+    <a th:href="@{/books}"><button type="button">Показати Усі Книги</button></a>
+</form>
+
+<hr>
+
+<h2 th:text="${searchMessage}">Список Книг</h2>
+
+<p th:if="${errorMessage}" class="error" th:text="${errorMessage}"></p>
+
+<div th:if="${dtoResults != null and !dtoResults.isEmpty()}">
+    <h3>Результати DTO (Запит 5)</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Назва</th>
+            <th>Автор</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="dto : ${dtoResults}">
+            <td th:text="${dto.title}"></td>
+            <td th:text="${dto.authorName}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:if="${!books.isEmpty()}">
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Назва</th>
+            <th>Автор</th>
+            <th>Рік</th>
+            <th>Видавництво</th>
+            <th>Жанр</th>
+            <th>Сторінки</th>
+            <th>Тираж</th>
+            <th>Бестселер</th>
+            <th>Дії</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="book : ${books}">
+            <td th:text="${book.id}"></td>
+            <td th:text="${book.title}"></td>
+            <td th:text="${book.authorName}"></td>
+            <td th:text="${book.publicationYear}"></td>
+            <td th:text="${book.publisher}"></td>
+            <td th:text="${book.genre}"></td>
+            <td th:text="${book.pageCount}"></td>
+            <td th:text="${book.circulation}"></td>
+            <td th:text="${book.isBestseller ? 'Так' : 'Ні'}"></td>
+            <td>
+                <a th:href="@{/books/edit/{id}(id=${book.id})}">Редагувати</a>
+                <a th:href="@{/books/delete/{id}(id=${book.id})}">Видалити</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<div th:if="${books.isEmpty() and (dtoResults == null or dtoResults.isEmpty())}">
+    <p>Книг не знайдено.</p>
+</div>
+
+</body>
+</html>
