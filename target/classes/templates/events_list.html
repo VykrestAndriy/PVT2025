@@ -1,11 +1,15 @@
 <!DOCTYPE html>
-<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<html lang="uk"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <title>Онлайн Купівля Квитків</title>
+    <title>Онлайн Купівля Квитків (ЛР 9)</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         h1 { color: #333; }
+        .auth-panel { float: right; margin-bottom: 20px; }
+        .auth-panel a, .auth-panel span { margin-left: 10px; }
         .message.success { color: green; font-weight: bold; }
         .message.error { color: red; font-weight: bold; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -13,15 +17,33 @@
         th { background-color: #f2f2f2; }
         form { margin-top: 10px; padding: 10px; border: 1px solid #ccc; }
         .search-results { margin-top: 20px; border-top: 2px solid #333; padding-top: 10px; }
+        .action-button { background-color: #4CAF50; color: white; padding: 8px 12px; border: none; cursor: pointer; border-radius: 4px; }
+        .action-button:hover { background-color: #45a049; }
     </style>
 </head>
 <body>
-<h1>Онлайн Купівля Квитків (ЛР 8)</h1>
+
+<div class="auth-panel">
+    <span sec:authorize="isAuthenticated()">
+        Вітаємо, <span sec:authentication="name">User</span> |
+        <a th:href="@{/logout}">Вихід</a>
+    </span>
+    <span sec:authorize="!isAuthenticated()">
+        <a th:href="@{/login}">Вхід</a> |
+        <a th:href="@{/register}">Реєстрація</a>
+    </span>
+</div>
+<div style="clear: both;"></div>
+
+<h1>Онлайн Купівля Квитків (ЛР 9)</h1>
 
 <div th:if="${successMessage}" class="message success" th:text="${successMessage}"></div>
 <div th:if="${errorMessage}" class="message error" th:text="${errorMessage}"></div>
 
-<p><a th:href="@{/create-event}"><button>Створити Нову Подію</button></a></p>
+<!-- Кнопка "Створити Нову Подію" доступна тільки для ROLE_ADMIN -->
+<p sec:authorize="hasAuthority('ROLE_ADMIN')">
+    <a th:href="@{/create-event}"><button class="action-button">Створити Нову Подію</button></a>
+</p>
 
 ---
 
@@ -58,7 +80,7 @@
 <form th:action="@{/tickets/search}" method="get">
     <label for="searchParam">Назва Події:</label>
     <input type="text" id="searchParam" name="searchParam" th:value="${searchParam}" required>
-    <button type="submit">Пошук Квитків</button>
+    <button type="submit" class="action-button">Пошук Квитків</button>
 </form>
 
 <div th:if="${!foundTickets.isEmpty()}" class="search-results">
@@ -69,7 +91,8 @@
             <th>ID</th>
             <th>Номер Місця</th>
             <th>Ціна</th>
-            <th>Присвоїти Покупцю</th>
+            <!-- Заголовок для присвоєння видимий, тільки якщо користувач має право купувати -->
+            <th sec:authorize="hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES')">Присвоїти Покупцю</th>
         </tr>
         </thead>
         <tbody>
@@ -77,7 +100,9 @@
             <td th:text="${ticket.id}"></td>
             <td th:text="${ticket.number}"></td>
             <td th:text="${#numbers.formatCurrency(ticket.cost)}"></td>
-            <td>
+
+            <!-- Форма присвоєння (Купівля) доступна тільки для ROLE_ADMIN та ROLE_SALES -->
+            <td sec:authorize="hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES')">
                 <form th:action="@{/ticket/assign/{id}(id=${ticket.id})}" method="post" style="display:inline;">
                     <select name="customerId" required>
                         <option value="">Виберіть покупця</option>
@@ -86,7 +111,7 @@
                                 th:text="${customer.name + ' (' + customer.email + ')'}">
                         </option>
                     </select>
-                    <button type="submit">Купити</button>
+                    <button type="submit" class="action-button">Купити</button>
                 </form>
             </td>
         </tr>
@@ -99,22 +124,24 @@
 
 ---
 
-<h2>Додати Нового Покупця</h2>
-<form th:action="@{/customer/add}" th:object="${newCustomer}" method="post">
-    <div>
-        <label for="cName">Ім'я:</label>
-        <input type="text" id="cName" th:field="*{name}" required>
-    </div>
-    <div>
-        <label for="cEmail">Email:</label>
-        <input type="text" id="cEmail" th:field="*{email}" required>
-    </div>
-    <div>
-        <label for="cPhone">Телефон:</label>
-        <input type="text" id="cPhone" th:field="*{phone}">
-    </div>
-    <button type="submit">Зберегти Покупця</button>
-</form>
+<div sec:authorize="hasAuthority('ROLE_ADMIN')">
+    <h2>Додати Нового Покупця</h2>
+    <form th:action="@{/customer/add}" th:object="${newCustomer}" method="post">
+        <div>
+            <label for="cName">Ім'я:</label>
+            <input type="text" id="cName" th:field="*{name}" required>
+        </div>
+        <div>
+            <label for="cEmail">Email:</label>
+            <input type="text" id="cEmail" th:field="*{email}" required>
+        </div>
+        <div>
+            <label for="cPhone">Телефон:</label>
+            <input type="text" id="cPhone" th:field="*{phone}">
+        </div>
+        <button type="submit" class="action-button">Зберегти Покупця</button>
+    </form>
+</div>
 
 </body>
 </html>
